@@ -1,8 +1,9 @@
 import { NextApiRequest } from "next";
 import database from "@/features/common/database";
+import { NextRequest } from "next/server";
 
 export async function GET(
-  _: NextApiRequest,
+  _: NextRequest | Request,
   { params }: { params: { id: string } }
 ) {
   try {
