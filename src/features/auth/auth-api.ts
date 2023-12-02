@@ -4,6 +4,8 @@ import AzureADProvider from "next-auth/providers/azure-ad";
 import GitHubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { hashValue } from "./helpers";
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import database from "@/features/common/database"
 
 const configureIdentityProvider = () => {
   const providers: Array<Provider> = [];
@@ -75,7 +77,6 @@ const configureIdentityProvider = () => {
               isAdmin: true,
               image: "",
             };
-          console.log("=== DEV USER LOGGED IN:\n", JSON.stringify(user, null, 2));
           return user;
         }
       })
@@ -86,6 +87,7 @@ const configureIdentityProvider = () => {
 };
 
 export const options: NextAuthOptions = {
+  adapter: PrismaAdapter(database),
   secret: process.env.NEXTAUTH_SECRET,
   providers: [...configureIdentityProvider()],
   callbacks: {
