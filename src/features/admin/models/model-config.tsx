@@ -14,6 +14,7 @@ import OpenAI from "openai";
 import { useEffect, useState } from "react";
 import { useGlobalMessageContext } from "@/features/global-message/global-message-context";
 import { Loader } from "lucide-react";
+import type { ModelConfig } from "@/lib/types";
 
 const MODEL_PROVIDERS = [
   {
@@ -22,11 +23,11 @@ const MODEL_PROVIDERS = [
     models: [
       {
         name: "GPT-3.5",
-        value: "gpt3.5",
+        value: "gpt-3.5-turbo",
       },
       {
         name: "GPT-4",
-        value: "gpt4",
+        value: "gpt-4",
       },
     ],
   },
@@ -147,18 +148,6 @@ function AnthropicConfig() {
     </div>
   );
 }
-
-type ModelConfig = {
-  provider: string;
-  openai: {
-    apiKey: string;
-    model: string;
-  };
-  anthropic: {
-    apiKey: string;
-    model: string;
-  };
-};
 
 function defaultConfig() {
   return {

@@ -22,11 +22,11 @@ const CONTEXT_PROMPT = ({
 - Given the following extracted parts of a long document, create a final answer. \n
 - If you don't know the answer, just say that you don't know. Don't try to make up an answer.\n
 - You must always include a citation at the end of your answer and don't include full stop.\n
-- Use the format for your citation {% citation items=[{name:"filename 1",id:"file id"}, {name:"filename 2",id:"file id"}] /%}\n 
-----------------\n 
-context:\n 
+- Use the format for your citation {% citation items=[{name:"filename 1",id:"file id"}, {name:"filename 2",id:"file id"}] /%}\n
+----------------\n
+context:\n
 ${context}
-----------------\n 
+----------------\n
 question: ${userQuestion}`;
 };
 
@@ -35,7 +35,7 @@ export const ChatAPIData = async (props: PromptGPTProps) => {
     props
   );
 
-  const openAI = OpenAIInstance();
+  const openAI = OpenAIInstance(process.env.OPENAI_API_KEY);
 
   const userId = await userHashedId();
 
