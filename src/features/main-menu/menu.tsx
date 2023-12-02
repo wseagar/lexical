@@ -7,7 +7,7 @@ import {
   MessageCircle,
   PanelLeftClose,
   PanelRightClose,
-  Triangle,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "../theme/theme-toggle";
@@ -41,19 +41,6 @@ export const MainMenu = () => {
             <MessageCircle />
           </Link>
         </Button>
-        {session?.user?.isAdmin ? (
-          <Button
-            asChild
-            className="rounded-full w-[40px] h-[40px] p-2 text-primary"
-            variant={"outline"}
-          >
-            <Link href="/admin/models" title="Models">
-              <LayoutDashboard />
-            </Link>
-          </Button>
-        ) : (
-          <></>
-        )}
       </div>
       <div className="flex flex-col gap-2 items-center">
         <Button
@@ -66,6 +53,19 @@ export const MainMenu = () => {
           </Link>
         </Button>
         <UserProfile />
+        {session?.user?.isAdmin ? (
+          <Button
+            asChild
+            className="rounded-full w-[40px] h-[40px] p-2 text-primary"
+            variant={"outline"}
+          >
+            <Link href="/admin/models" title="Models">
+              <Settings />
+            </Link>
+          </Button>
+        ) : (
+          <></>
+        )}
         <Button
           onClick={toggleMenu}
           className="rounded-full w-[40px] h-[40px] p-1 text-primary"

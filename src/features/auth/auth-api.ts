@@ -2,29 +2,16 @@ import NextAuth, { NextAuthOptions } from "next-auth";
 import { Provider } from "next-auth/providers";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { hashValue } from "./helpers";
+import { PrismaAdapter } from "@auth/prisma-adapter"
+import database from "@/features/common/database"
 
 const configureIdentityProvider = () => {
   const providers: Array<Provider> = [];
 
   const adminEmails = process.env.ADMIN_EMAIL_ADDRESS?.split(",").map(email => email.toLowerCase().trim());
-
-  if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
-    providers.push(
-      GitHubProvider({
-        clientId: process.env.AUTH_GITHUB_ID!,
-        clientSecret: process.env.AUTH_GITHUB_SECRET!,
-        async profile(profile) {
-          const newProfile = {
-            ...profile,
-            isAdmin: adminEmails?.includes(profile.email.toLowerCase())
-          }
-          return newProfile;
-        }
-      })
-    );
-  }
 
   if (
     process.env.AZURE_AD_CLIENT_ID &&
@@ -50,6 +37,11 @@ const configureIdentityProvider = () => {
     );
   }
 
+  providers.push(GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET
+  }))
+  
   // If we're in local dev, add a basic credential provider option as well
   // (Useful when a dev doesn't have access to create app registration in their tenant)
   // This currently takes any username and makes a user with it, ignores password
@@ -57,6 +49,7 @@ const configureIdentityProvider = () => {
   if (process.env.NODE_ENV === "development") {
     providers.push(
       CredentialsProvider({
+        type: "credentials",
         name: "localdev",
         credentials: {
           username: { label: "Username", type: "text", placeholder: "dev" },
@@ -72,10 +65,9 @@ const configureIdentityProvider = () => {
               id: hashValue(email),
               name: username,
               email: email,
-              isAdmin: true,
+              // isAdmin: true,
               image: "",
             };
-          console.log("=== DEV USER LOGGED IN:\n", JSON.stringify(user, null, 2));
           return user;
         }
       })
@@ -86,6 +78,7 @@ const configureIdentityProvider = () => {
 };
 
 export const options: NextAuthOptions = {
+  adapter: PrismaAdapter(database),
   secret: process.env.NEXTAUTH_SECRET,
   providers: [...configureIdentityProvider()],
   callbacks: {
@@ -96,9 +89,9 @@ export const options: NextAuthOptions = {
       return token
     },
     async session({session, token, user }) {
-      session.user.isAdmin = token.isAdmin as string
+      // session.user.isAdmin = token.isAdmin as string
       return session
-    }
+    },
   },
   session: {
     strategy: "jwt",

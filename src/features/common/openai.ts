@@ -1,13 +1,13 @@
 import { OpenAI } from "openai";
 
-export const OpenAIInstance = () => {
+export const OpenAIInstance = (apiKey: string) => {
   const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: apiKey,
     // defaultQuery: { "api-version": process.env.OPENAI_API_VERSION },
     // defaultHeaders: { "api-key": process.env.OPENAI_API_KEY },
   });
   return openai;
-}
+};
 
 export const AzureOpenAIInstance = () => {
   const openai = new OpenAI({

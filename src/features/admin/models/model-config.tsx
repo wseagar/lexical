@@ -11,7 +11,10 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import OpenAI from "openai";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useGlobalMessageContext } from "@/features/global-message/global-message-context";
+import { Loader } from "lucide-react";
+import type { ModelConfig } from "@/lib/types";
 
 const MODEL_PROVIDERS = [
   {
@@ -20,11 +23,11 @@ const MODEL_PROVIDERS = [
     models: [
       {
         name: "GPT-3.5",
-        value: "gpt3.5",
+        value: "gpt-3.5-turbo",
       },
       {
         name: "GPT-4",
-        value: "gpt4",
+        value: "gpt-4",
       },
     ],
   },
@@ -146,23 +149,51 @@ function AnthropicConfig() {
   );
 }
 
-export default function ModelConfig() {
-  const form = useForm({
-    defaultValues: {
-      provider: "",
-      openai: {
-        apiKey: "",
-        model: "",
-      },
-      anthropic: {
-        apiKey: "",
-        model: "",
-      },
+function defaultConfig() {
+  return {
+    provider: "",
+    openai: {
+      apiKey: "",
+      model: "",
     },
-  });
+    anthropic: {
+      apiKey: "",
+      model: "",
+    },
+  };
+}
 
-  function onSubmit() {
-    console.log(form.getValues());
+export default function ModelConfig({ config }: { config?: ModelConfig }) {
+  const [loading, setLoading] = useState(false);
+  const { showError, showSuccess } = useGlobalMessageContext();
+  const defaultValues = config || defaultConfig();
+  const form = useForm({
+    defaultValues: defaultValues,
+  });
+  const provider = form.watch("provider");
+
+  async function onSubmit(values: ModelConfig) {
+    try {
+      setLoading(true);
+      const response = await fetch("/api/config", {
+        method: "POST",
+        body: JSON.stringify({
+          key: "llm",
+          value: values,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to save config");
+      }
+      showSuccess({
+        title: "Model Configuration",
+        description: "Model configuration saved successfully.",
+      });
+    } catch (error) {
+      showError("" + error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -201,8 +232,16 @@ export default function ModelConfig() {
               />
               <OpenAIConfig />
               <AnthropicConfig />
-              <Button type="submit" className="w-full">
-                Save Configuration
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || !provider}
+              >
+                {loading ? (
+                  <Loader className="animate-spin" size={16} />
+                ) : (
+                  "Save Configuration"
+                )}
               </Button>
             </form>
           </Form>
