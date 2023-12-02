@@ -24,6 +24,7 @@ export default [
             correct: false,
           },
         ],
+        explanation: "Paris is the capital of France",
       },
       {
         question: "What is the capital of India?",
@@ -45,6 +46,7 @@ export default [
             correct: true,
           },
         ],
+        explanation: "Delhi is the capital of India",
       },
       {
         question: "What is the capital of USA?",
@@ -66,6 +68,7 @@ export default [
             correct: false,
           },
         ],
+        explanation: "Washington is the capital of USA",
       },
       {
         question: "What is the capital of UAE?",
@@ -87,6 +90,7 @@ export default [
             correct: true,
           },
         ],
+        explanation: "Dubai is the capital of UAE",
       },
     ],
   },
@@ -115,6 +119,7 @@ export default [
             correct: false,
           },
         ],
+        explanation: "Paris is the capital of France",
       },
       {
         question: "What is the capital of India?",
@@ -136,6 +141,7 @@ export default [
             correct: true,
           },
         ],
+        explanation: "Delhi is the capital of India",
       },
       {
         question: "What is the capital of USA?",
@@ -157,6 +163,7 @@ export default [
             correct: false,
           },
         ],
+        explanation: "Washington is the capital of USA",
       },
       {
         question: "What is the capital of UAE?",
@@ -178,6 +185,7 @@ export default [
             correct: true,
           },
         ],
+        explanation: "Dubai is the capital of UAE",
       },
     ],
   },
