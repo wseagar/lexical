@@ -226,8 +226,6 @@ export const UploadIndexAndSaveDocument = async (
     const chatThreadId = formData.get("id") as string;
     const fileName = formData.get("fileName") as string;
 
-    console.log("CHAT THREAD ID: " + chatThreadId)
-
     const blob = new Blob([file], { type: file.type });
     const arrayBuffer = await blob.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
@@ -306,7 +304,7 @@ export const UploadIndexAndSaveDocument = async (
       return new Promise((resolve) => setTimeout(resolve, ms));
     };
 
-    const MAX_RETRIES = 10;
+    const MAX_RETRIES = 10000000;
     let retries = 0;
     while (true) {
       console.log("RETRIES: " + retries);
