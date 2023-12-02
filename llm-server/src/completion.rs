@@ -1,7 +1,6 @@
 use std::{sync::Arc, thread, time::SystemTime};
 
-use futures::{channel::mpsc, Stream, TryStream};
-use itertools::Itertools;
+use futures::{channel::mpsc, TryStream};
 use llm::InferenceError;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -10,9 +9,6 @@ use crate::session::ModelSession;
 
 // TODO: determine the best value for buffer size
 const BUFFER_SIZE: usize = 50;
-
-
-// {"id":"chatcmpl-123","object":"chat.completion.chunk","created":1694268190,"model":"gpt-3.5-turbo-0613", "system_fingerprint": "fp_44709d6fcb", "choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
 
 /// A chat completition request.
 ///
@@ -41,15 +37,7 @@ pub struct CompletionRequest<'a> {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CompletionRequestRole {
-  System,
-  User,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct CompletionRequestMessage<'a> {
-  role: CompletionRequestRole,
   content: &'a str,
 }
 
@@ -116,16 +104,15 @@ pub enum CompletionResponseDelta {
   Empty {},
 }
 
-impl<'a, M: llm::Model> ModelSession<'a, M> {
+impl<M: llm::Model> ModelSession<M> {
   pub fn stream_completion<'b>(
-    &'b self,
+    &self,
     request: CompletionRequest<'b>,
-  ) -> impl TryStream<Ok = CompletionResponseChunk, Error = InferenceError> + 'b
+  ) -> impl TryStream<Ok = CompletionResponseChunk, Error = InferenceError>
   where
-    'b: 'a,
+    M: 'static,
   {
     // TODO: checked streamed and model on request
-
     let created = SystemTime::now()
       .duration_since(SystemTime::UNIX_EPOCH)
       .expect("time must be after Unix epoch")
@@ -135,32 +122,36 @@ impl<'a, M: llm::Model> ModelSession<'a, M> {
     let prompt: String =
       itertools::Itertools::intersperse(request.messages.into_iter().map(|message| message.content), "\n").collect();
     let id = Uuid::new_v4();
-
-    // TODO: try and make this borrow from self
     let model_name = self.model.name().to_string();
 
-    let (mut tx, mut rx) = mpsc::channel::<Result<CompletionResponseChunk, InferenceError>>(BUFFER_SIZE);
-    tx.try_send(Ok(CompletionResponseChunk {
-      id,
-      object: "chat.completion.chunk",
-      created,
-      model: model_name.clone(),
-      system_fingerprint: system_fingerprint.clone(),
-      choices: vec![CompletionResponseChoice {
-        index: 0,
-        delta: CompletionResponseDelta::Role {
-          role: CompletionResponseRole::Assistant,
-        },
-        finish_reason: None,
-      }],
-    }));
+    let session = Arc::clone(&self.session);
+    let model = Arc::clone(&self.model);
 
-    let session_ref = Arc::clone(&self.session);
+    let (mut tx, rx) = mpsc::channel::<Result<CompletionResponseChunk, InferenceError>>(BUFFER_SIZE);
 
     thread::spawn(move || {
-      let session = session_ref.lock().unwrap();
+      let mut session = session.lock().expect("poisoned mutex");
+
+      if let Err(_) = tx.try_send(Ok(CompletionResponseChunk {
+        id,
+        object: "chat.completion.chunk",
+        created,
+        model: model_name.clone(),
+        system_fingerprint: system_fingerprint.clone(),
+        choices: vec![CompletionResponseChoice {
+          index: 0,
+          delta: CompletionResponseDelta::Role {
+            role: CompletionResponseRole::Assistant,
+          },
+          finish_reason: None,
+        }],
+      })) {
+        // the reciever hung up, don't both starting inference
+        return;
+      }
+
       let result = session.infer::<InferenceError>(
-        &self.model.inner,
+        &model.inner,
         &mut rand::thread_rng(),
         &llm::InferenceRequest {
           prompt: llm::Prompt::Text(&prompt),
@@ -209,6 +200,11 @@ impl<'a, M: llm::Model> ModelSession<'a, M> {
           _ => Ok(llm::InferenceFeedback::Continue),
         },
       );
+
+      if let Err(err) = result {
+        // if an error occurs during inference send that error to the stream
+        tx.try_send(Err(err)).ok(); // if that fails there's nothing we can do, ignore it
+      }
     });
 
     rx

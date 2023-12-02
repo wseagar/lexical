@@ -4,13 +4,13 @@ use llm::{InferenceSession, InferenceSessionConfig};
 
 use crate::model::Model;
 
-pub struct ModelSession<'a, M: llm::Model> {
-  pub(crate) model: &'a Model<M>,
+pub struct ModelSession<M: llm::Model> {
   pub(crate) session: Arc<Mutex<InferenceSession>>,
+  pub(crate) model: Arc<Model<M>>,
 }
 
-impl<'a, M: llm::Model> ModelSession<'a, M> {
-  pub fn new(model: &'a Model<M>, config: InferenceSessionConfig) -> Self {
+impl<M: llm::Model> ModelSession<M> {
+  pub fn new(model: Arc<Model<M>>, config: InferenceSessionConfig) -> Self {
     ModelSession {
       session: Arc::new(Mutex::new(model.inner.start_session(config))),
       model,
