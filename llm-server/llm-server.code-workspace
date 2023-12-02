@@ -1,0 +1,53 @@
+{
+  "folders": [{ "path": "." }],
+  "settings": {
+    "editor.detectIndentation": false,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
+    "rust-analyzer.inlayHints.enable": false,
+    "[toml]": {
+      "editor.defaultFormatter": "be5invis.toml"
+    },
+    "[rust]": {
+      "editor.defaultFormatter": "rust-lang.rust-analyzer"
+    }
+  },
+  "launch": {
+    "configurations": [
+      {
+        "type": "lldb",
+        "request": "launch",
+        "name": "LLM Server",
+        "preLaunchTask": "build llm-server",
+        "program": "${workspaceRoot:llm-server}/target/debug/llm-server",
+        "cwd": "${workspaceRoot:llm-server}",
+        "sourceLanguages": ["rust"],
+        "terminal": "integrated",
+        "console": "integratedTerminal",
+        "env": {
+          "RUST_LOG": "info"
+        }
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "cargo",
+        "command": "build",
+        "problemMatcher": ["$rustc"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "label": "build llm-server",
+        "options": {
+          "cwd": "${workspaceRoot:llm-server}"
+        }
+      }
+    ]
+  }
+}

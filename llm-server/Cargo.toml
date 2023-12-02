@@ -1,0 +1,7 @@
+[package]
+authors = ["Oliver Cooper <https://github.com/oeed>"]
+edition = "2021"
+name = "llm-server"
+version = "0.1.0"
+
+[dependencies]
