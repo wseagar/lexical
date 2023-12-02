@@ -1,5 +1,1 @@
-pub mod completion;
-mod model;
-mod session;
-
-pub use crate::{model::Model, session::ModelSession};
+//! Hosts the HTTP server, which calls `llm-exec`
